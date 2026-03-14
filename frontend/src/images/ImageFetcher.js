@@ -5,7 +5,7 @@ const IMAGES = [
         name: "Blue merle herding sheep",
         author: {
             id: "0",
-            username: "chunkylover23"
+            username: "new_user_1"
         }
     },
     {
@@ -14,7 +14,7 @@ const IMAGES = [
         name: "Huskies",
         author: {
             id: "0",
-            username: "chunkylover23"
+            username: "new_user_1"
         }
     },
     {
