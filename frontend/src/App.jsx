@@ -32,7 +32,7 @@ function App() {
         } />
         <Route path={VALID_ROUTES.UPLOAD} element={
           <ProtectedRoute authToken={authToken}>
-            <UploadPage />
+            <UploadPage authToken={authToken} />
           </ProtectedRoute>
         } />
         <Route path={VALID_ROUTES.LOGIN} element={<LoginPage onTokenChange={setAuthToken} />} />
