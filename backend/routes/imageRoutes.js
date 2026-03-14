@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 import { verifyAuthToken } from "./verifyTokens.js";
+import { imageMiddlewareFactory, handleImageFileErrors } from "./imageUploadMiddleware.js";
 
 const MAX_NAME_LENGTH = 100;
 
@@ -40,6 +41,36 @@ export function registerImageRoutes(app, imageProvider) {
         return res.json(image);
     });
 
+    app.post(
+        "/api/images",
+        imageMiddlewareFactory.single("image"),
+        handleImageFileErrors,
+        async (req, res) => {
+            const file = req.file;
+            const name = req.body?.name;
+            const authorUsername = req.userInfo?.username;
+
+            if (!file || typeof name !== "string" || name.trim().length === 0 || typeof authorUsername !== "string") {
+                return res.status(400).send({
+                    error: "Bad Request",
+                    message: "Missing file or image name"
+                });
+            }
+
+            const trimmedName = name.trim();
+            if (trimmedName.length > MAX_NAME_LENGTH) {
+                return res.status(413).send({
+                    error: "Content Too Large",
+                    message: `Image name exceeds ${MAX_NAME_LENGTH} characters`
+                });
+            }
+
+            const src = `/uploads/${file.filename}`;
+            const imageId = await imageProvider.createImage(src, trimmedName, authorUsername);
+            return res.status(201).send({ imageId });
+        }
+    );
+
     app.patch("/api/images/:imageId", async (req, res) => {
         const { name } = req.body;
         if (typeof name !== "string" || name.trim().length === 0) {
@@ -72,10 +103,25 @@ export function registerImageRoutes(app, imageProvider) {
             });
         }
 
-        if (image.author?.username !== req.userInfo.username) {
+        const ownerUsername = String(
+            image.author?.username ||
+            (typeof image.author === "string" ? image.author : "") ||
+            (typeof image.authorId === "string" ? image.authorId : "")
+        ).trim();
+        const requesterUsername = String(req.userInfo?.username ?? "").trim();
+        const isOwner =
+            ownerUsername.length > 0 &&
+            requesterUsername.length > 0 &&
+            ownerUsername.toLowerCase() === requesterUsername.toLowerCase();
+
+        if (!isOwner) {
             return res.status(403).send({
                 error: "Forbidden",
-                message: "This user does not own this image"
+                message: "This user does not own this image",
+                details: {
+                    ownerUsername,
+                    requesterUsername
+                }
             });
         }
 

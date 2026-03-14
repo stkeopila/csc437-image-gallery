@@ -48,7 +48,8 @@ export function registerAuthRoutes(app, credentialsProvider) {
             });
         }
 
-        return res.status(201).send();
+        const token = await generateAuthToken(username);
+        return res.status(201).send({ token });
     });
 
     app.post("/api/auth/tokens", async (req, res) => {

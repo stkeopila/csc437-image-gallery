@@ -7,6 +7,7 @@ export class ImageProvider {
         this.imagesCollectionName = getEnvVar("IMAGES_COLLECTION_NAME");
         this.usersCollectionName = getEnvVar("USERS_COLLECTION_NAME");
         this.collection = this.mongoClient.db().collection(this.imagesCollectionName);
+        this.usersCollection = this.mongoClient.db().collection(this.usersCollectionName);
     }
 
     _lookupAuthorPipeline() {
@@ -43,5 +44,25 @@ export class ImageProvider {
             { _id: new ObjectId(id) },
             { $set: { name: newName } }
         );
+    }
+
+    async createImage(src, name, authorUsername) {
+        const authorUser = await this.usersCollection.findOne(
+            { username: authorUsername },
+            { projection: { _id: 1 } }
+        );
+
+        const imageDoc = {
+            src,
+            name,
+            authorId: authorUsername,
+        };
+
+        if (authorUser?._id) {
+            imageDoc.author = authorUser._id;
+        }
+
+        const result = await this.collection.insertOne(imageDoc);
+        return result.insertedId;
     }
 }

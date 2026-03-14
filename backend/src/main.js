@@ -11,10 +11,13 @@ import { registerAuthRoutes } from "../routes/authRoutes.js";
 
 const PORT = Number.parseInt(getEnvVar("PORT", false), 10) || 3000;
 const STATIC_DIR = getEnvVar("STATIC_DIR") || "public";
+const IMAGE_UPLOAD_DIR = getEnvVar("IMAGE_UPLOAD_DIR") || "uploads";
 const app = express();
 const resolvedStatic = path.resolve(STATIC_DIR);
+const resolvedUploadDir = path.resolve(IMAGE_UPLOAD_DIR);
 
 app.use(express.static(resolvedStatic));
+app.use("/uploads", express.static(resolvedUploadDir));
 app.use(express.json());
 
 async function startServer() {
