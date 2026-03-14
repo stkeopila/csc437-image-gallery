@@ -4,7 +4,7 @@ import { getEnvVar } from "./src/getEnvVar.js";
 /**
  * Returns a new MongoClient instance with connection configured by the current environment variables.
  */
-export function connectMongo() {
+export async function connectMongo() {
     const MONGO_USER = getEnvVar("MONGO_USER");
     const MONGO_PWD = getEnvVar("MONGO_PWD");
     const MONGO_CLUSTER = getEnvVar("MONGO_CLUSTER");
@@ -14,5 +14,8 @@ export function connectMongo() {
     const connectionString = `mongodb+srv://${encodeURIComponent(MONGO_USER)}:${encodeURIComponent(MONGO_PWD)}@${MONGO_CLUSTER}/${DB_NAME}`;
     console.log("Attempting Mongo connection at " + connectionStringRedacted);
 
-    return new MongoClient(connectionString);
+    const client = new MongoClient(connectionString);
+    await client.connect();
+    console.log("Successfully connected to MongoDB.");
+    return client;
 }
