@@ -1,4 +1,6 @@
 import { useActionState, useId, useState } from "react";
+import { useNavigate } from "react-router";
+import { VALID_ROUTES } from "../../shared/ValidRoutes.js";
 
 function readAsDataURL(file) {
     return new Promise((resolve, reject) => {
@@ -13,6 +15,7 @@ export function UploadPage({ authToken }) {
     const imageInputId = useId();
     const nameInputId = useId();
     const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+    const navigate = useNavigate();
 
     const [submitResult, submitAction, isPending] = useActionState(async (_previousResult, formData) => {
         try {
@@ -26,8 +29,20 @@ export function UploadPage({ authToken }) {
 
             if (!response.ok) {
                 setImagePreviewUrl("");
-                return `Upload failed: HTTP ${response.status} ${response.statusText}`;
+                try {
+                    const errorBody = await response.json();
+                    return errorBody?.message || `Upload failed: HTTP ${response.status} ${response.statusText}`;
+                } catch {
+                    return `Upload failed: HTTP ${response.status} ${response.statusText}`;
+                }
             }
+
+            const data = await response.json();
+            if (typeof data?.imageId !== "string" || data.imageId.length === 0) {
+                return "Upload failed: server did not return image id";
+            }
+
+            navigate(`${VALID_ROUTES.IMAGE_PREFIX}/${data.imageId}`);
 
             return "";
         } catch (error) {
