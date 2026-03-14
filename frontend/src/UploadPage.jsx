@@ -87,7 +87,7 @@ export function UploadPage({ authToken }) {
                 <input id={nameInputId} name="name" disabled={isPending} required />
             </div>
 
-            <div> {/* Preview img element */}
+            <div>
                 {imagePreviewUrl && (
                     <img style={{width: "20em", maxWidth: "100%"}} src={imagePreviewUrl} alt="Selected upload preview" />
                 )}
